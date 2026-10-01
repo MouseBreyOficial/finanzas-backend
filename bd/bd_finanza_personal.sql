@@ -202,23 +202,3 @@ CREATE INDEX idx_alertas_id_cuenta ON alertas(id_cuenta);
 CREATE INDEX idx_alertas_fecha_estado ON alertas(fecha_alerta, estado);
 
 COMMIT;
-
--- ============================================================================
--- FIN DEL SCRIPT
---
--- Incluido en este archivo:
---   [OK] usuarios + datos de baja/auditoria
---   [OK] nombre_usuario unico case-insensitive (LOWER + TRIM)
---   [OK] cuentas.saldo_inicial
---   [OK] cuentas.saldo_actual
---   [OK] ingresos
---   [OK] gastos + categoria
---   [OK] alertas.es_recurrente
---   [OK] alertas.frecuencia
---   [OK] alertas.dia_mes
---   [OK] alertas.estado
---   [OK] alertas.monto
---   [OK] alertas.categoria
---   [OK] alertas.id_cuenta
---   [OK] claves foraneas e indices de consulta
--- ============================================================================
