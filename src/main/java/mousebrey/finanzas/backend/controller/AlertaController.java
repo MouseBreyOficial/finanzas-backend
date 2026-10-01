@@ -36,6 +36,7 @@ public class AlertaController {
     public ResponseEntity<ResponseClient<AlertaResponse>> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(alertaService.obtenerPorId(id));
     }
+
     @PostMapping("/{id}/pagar")
     public ResponseEntity<ResponseClient<AlertaResponse>> marcarPagada(@PathVariable Long id, @RequestParam String usuario) {
         return ResponseEntity.ok(alertaService.marcarPagada(id, usuario));

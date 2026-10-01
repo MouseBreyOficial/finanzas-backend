@@ -44,6 +44,7 @@ public class GastoController {
     public ResponseEntity<ResponseClient<Map<String, Double>>> promedios(@PathVariable Long idUsuario) {
         return ResponseEntity.ok(gastoService.promedioPorCategoria(idUsuario));
     }
+
     @GetMapping("/categorias/{idUsuario}")
     public ResponseEntity<ResponseClientList<String>> categorias(@PathVariable Long idUsuario) {
         return ResponseEntity.ok(gastoService.categorias(idUsuario));

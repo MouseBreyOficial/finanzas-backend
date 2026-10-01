@@ -30,18 +30,22 @@ public class UsuarioServiceImpl implements UsuarioService {
     public ResponseClient<UsuarioResponse> registrar(UsuarioRequest request) {
         try {
             String nombreUsuario = request.getNombreUsuario() == null ? "" : request.getNombreUsuario().trim();
+
             if (nombreUsuario.isBlank()) {
                 throw new ValidationException(Constant.CODIGO_ERROR, "El nombre de usuario es obligatorio");
             }
+
             if (usuarioRepository.existsNombreUsuarioEnTodaLaTabla(nombreUsuario)) {
                 throw new ValidationException(Constant.CODIGO_ERROR, "El nombre de usuario ya se encuentra registrado");
             }
 
             Usuario usuario = new Usuario();
             usuario.setNombreUsuario(nombreUsuario);
+
             if (request.getHashContrasena() == null || request.getHashContrasena().isBlank()) {
                 throw new ValidationException(Constant.CODIGO_ERROR, "La contraseña es obligatoria");
             }
+
             usuario.setHashContrasena(passwordEncoder.encode(request.getHashContrasena()));
             usuario.setNombreCompleto(request.getNombreCompleto());
             usuario.setCorreoElectronico(request.getCorreoElectronico());

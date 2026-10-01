@@ -35,9 +35,12 @@ public class GastoServiceImpl implements GastoService {
     public ResponseClient<GastoResponse> registrar(GastoRequest request) {
         Cuenta cuenta = cuentaRepository.findById(request.getIdCuenta())
                 .orElseThrow(() -> new ValidationException(Constant.CODIGO_EMPTY, "Cuenta no encontrada"));
+
         BigDecimal disponible = cuenta.getSaldoActual() == null ? BigDecimal.ZERO : cuenta.getSaldoActual();
+
         if (request.getMonto() == null || request.getMonto().compareTo(BigDecimal.ZERO) <= 0)
             throw new ValidationException(Constant.CODIGO_ERROR, "El monto debe ser mayor a cero");
+
         if (request.getMonto().compareTo(disponible) > 0)
             throw new ValidationException(Constant.CODIGO_ERROR, "Saldo insuficiente. Disponible: S/ " + disponible);
 
@@ -50,8 +53,10 @@ public class GastoServiceImpl implements GastoService {
         gasto.setUsuarioCreacion(request.getUsuarioCreacion());
         gasto.setFechaCreacion(LocalDateTime.now());
         gastoRepository.save(gasto);
+
         cuenta.setSaldoActual(disponible.subtract(request.getMonto()));
         cuentaRepository.save(cuenta);
+
         return ResponseClient.setOk(mapToResponse(gasto));
     }
 
@@ -59,13 +64,17 @@ public class GastoServiceImpl implements GastoService {
     public ResponseClient<GastoResponse> actualizar(GastoUpdateRequest request) {
         Gasto gasto = gastoRepository.findById(request.getId())
                 .orElseThrow(() -> new ValidationException(Constant.CODIGO_EMPTY, "Gasto no encontrado"));
+
         Cuenta cuenta = gasto.getCuenta();
         BigDecimal montoAnterior = gasto.getMonto();
         BigDecimal disponibleReal = (cuenta.getSaldoActual() == null ? BigDecimal.ZERO : cuenta.getSaldoActual()).add(montoAnterior);
+
         if (request.getMonto() == null || request.getMonto().compareTo(BigDecimal.ZERO) <= 0)
             throw new ValidationException(Constant.CODIGO_ERROR, "El monto debe ser mayor a cero");
+
         if (request.getMonto().compareTo(disponibleReal) > 0)
             throw new ValidationException(Constant.CODIGO_ERROR, "Saldo insuficiente. Disponible para este gasto: S/ " + disponibleReal);
+
         gasto.setMonto(request.getMonto());
         gasto.setFecha(request.getFecha());
         gasto.setCategoria(normalizarCategoria(request.getCategoria()));
@@ -73,8 +82,10 @@ public class GastoServiceImpl implements GastoService {
         gasto.setUsuarioModificacion(request.getUsuarioModificacion());
         gasto.setFechaModificacion(LocalDateTime.now());
         gastoRepository.save(gasto);
+
         cuenta.setSaldoActual(disponibleReal.subtract(request.getMonto()));
         cuentaRepository.save(cuenta);
+
         return ResponseClient.setOk(mapToResponse(gasto));
     }
 

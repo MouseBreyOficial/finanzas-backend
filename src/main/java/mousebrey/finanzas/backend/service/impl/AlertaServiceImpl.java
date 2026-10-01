@@ -19,6 +19,8 @@ import mousebrey.finanzas.backend.repository.UsuarioRepository;
 import mousebrey.finanzas.backend.service.AlertaService;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -109,12 +111,12 @@ public class AlertaServiceImpl implements AlertaService {
         Alerta alerta = alertaRepository.findById(id).orElseThrow(() -> new ValidationException(Constant.CODIGO_EMPTY, "Alerta no encontrada"));
         if (alerta.getMonto() != null && alerta.getCuenta() != null) {
             Cuenta cuenta = alerta.getCuenta();
-            java.math.BigDecimal disponible = cuenta.getSaldoActual() == null ? java.math.BigDecimal.ZERO : cuenta.getSaldoActual();
+            BigDecimal disponible = cuenta.getSaldoActual() == null ? BigDecimal.ZERO : cuenta.getSaldoActual();
             if (alerta.getMonto().compareTo(disponible) > 0) {
                 throw new ValidationException(Constant.CODIGO_ERROR, "Saldo insuficiente para pagar la alerta. Disponible: S/ " + disponible);
             }
             Gasto gasto = new Gasto();
-            gasto.setMonto(alerta.getMonto()); gasto.setFecha(java.time.LocalDate.now());
+            gasto.setMonto(alerta.getMonto()); gasto.setFecha(LocalDate.now());
             gasto.setCategoria(alerta.getCategoria() == null ? "PAGO_FIJO" : alerta.getCategoria());
             gasto.setDescripcion(alerta.getDescripcion()); gasto.setCuenta(alerta.getCuenta());
             gasto.setUsuarioCreacion(usuario); gasto.setFechaCreacion(LocalDateTime.now()); gastoRepository.save(gasto);
@@ -122,13 +124,17 @@ public class AlertaServiceImpl implements AlertaService {
             cuentaRepository.save(cuenta);
         }
         if (Boolean.TRUE.equals(alerta.getEsRecurrente())) {
-            java.time.LocalDate base = alerta.getFechaAlerta().isAfter(java.time.LocalDate.now()) ? alerta.getFechaAlerta() : java.time.LocalDate.now();
-            java.time.LocalDate next = base.plusMonths(1);
+            LocalDate base = alerta.getFechaAlerta().isAfter(LocalDate.now()) ? alerta.getFechaAlerta() : LocalDate.now();
+            LocalDate next = base.plusMonths(1);
             int dia = alerta.getDiaMes() == null ? alerta.getFechaAlerta().getDayOfMonth() : alerta.getDiaMes();
             alerta.setFechaAlerta(next.withDayOfMonth(Math.min(dia, next.lengthOfMonth())));
             alerta.setEstado("PENDIENTE");
-        } else { alerta.setEstado("PAGADO"); }
-        alerta.setUsuarioModificacion(usuario); alerta.setFechaModificacion(LocalDateTime.now()); alertaRepository.save(alerta);
+        } else {
+            alerta.setEstado("PAGADO");
+        }
+        alerta.setUsuarioModificacion(usuario);
+        alerta.setFechaModificacion(LocalDateTime.now());
+        alertaRepository.save(alerta);
         return ResponseClient.setOk(mapToResponse(alerta));
     }
 

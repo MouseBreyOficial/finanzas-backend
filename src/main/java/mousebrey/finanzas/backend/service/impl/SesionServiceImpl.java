@@ -25,9 +25,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class SesionServiceImpl implements SesionService {
 
-    private final UsuarioService usuarioService;
     private final JwtUtil jwtUtil;
-    private final AuthenticationManager authManager;
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository usuarioRepo;
     private final AuthenticationManager authenticationManager;
@@ -36,9 +34,11 @@ public class SesionServiceImpl implements SesionService {
         try {
             Usuario usuario = usuarioRepo.findByNombreUsuarioIgnoreCase(request.getUsername())
                     .orElseThrow(() -> new ValidationException(Constant.CODIGO_ERROR, "Usuario o contraseña incorrectos"));
+
             if (usuario.getEstadoRegistro() == null || usuario.getEstadoRegistro() != 1) {
                 throw new ValidationException(Constant.CODIGO_ERROR, "La cuenta se encuentra desactivada");
             }
+
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
             String token = jwtUtil.generarToken(usuario.getNombreUsuario());
 
@@ -76,7 +76,6 @@ public class SesionServiceImpl implements SesionService {
             nuevo.setNombreCompleto(dto.getNombreCompleto());
             nuevo.setCorreoElectronico(dto.getEmail());
             nuevo.setUsuarioCreacion(dto.getUsuarioCreacion());
-            nuevo.setFechaCreacion(LocalDateTime.now());
             nuevo.setEstadoRegistro(1);
             nuevo.setFechaCreacion(LocalDateTime.now());
 

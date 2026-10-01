@@ -81,6 +81,7 @@ public class CuentaServiceImpl implements CuentaService {
         Cuenta cuenta = cuentaRepository.findById(id)
                 .orElseThrow(() -> new ValidationException(Constant.CODIGO_EMPTY, "Cuenta no encontrada"));
         return ResponseClient.setOk(mapToResponse(cuenta));
+
     }
 
     private CuentaResponse mapToResponse(Cuenta cuenta) {

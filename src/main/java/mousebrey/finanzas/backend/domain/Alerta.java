@@ -30,12 +30,18 @@ public class Alerta extends BaseModel {
 
     @Column(name = "es_recurrente")
     private Boolean esRecurrente = false;
+
     private String frecuencia;
+
     @Column(name = "dia_mes")
     private Integer diaMes;
+
     private String estado = "PENDIENTE";
+
     private BigDecimal monto;
+
     private String categoria;
+
     @ManyToOne
     @JoinColumn(name = "id_cuenta")
     private Cuenta cuenta;
