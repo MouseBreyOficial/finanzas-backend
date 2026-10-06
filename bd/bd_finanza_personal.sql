@@ -201,4 +201,56 @@ CREATE INDEX idx_alertas_id_usuario ON alertas(id_usuario);
 CREATE INDEX idx_alertas_id_cuenta ON alertas(id_cuenta);
 CREATE INDEX idx_alertas_fecha_estado ON alertas(fecha_alerta, estado);
 
+
+-- ============================================================================
+-- 6. SUSCRIPCIONES WEB PUSH
+--    Guarda los dispositivos/navegadores registrados para recibir
+--    notificaciones Web Push.
+-- ============================================================================
+
+CREATE SEQUENCE push_suscripciones_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+CREATE TABLE push_suscripciones (
+    id_push_suscripcion BIGINT NOT NULL
+        DEFAULT nextval('push_suscripciones_id_seq'),
+
+    id_usuario          BIGINT NOT NULL,
+
+    endpoint            TEXT NOT NULL,
+    p256dh              TEXT NOT NULL,
+    auth                TEXT NOT NULL,
+
+    estado_registro     INTEGER DEFAULT 1,
+
+    -- Auditoria (BaseModel)
+    usuario_creacion     VARCHAR(100),
+    fecha_creacion       TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_modificacion   TIMESTAMP,
+
+    CONSTRAINT pk_push_suscripciones
+        PRIMARY KEY (id_push_suscripcion),
+
+    CONSTRAINT fk_push_suscripciones_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES usuarios(id_usuario),
+
+    CONSTRAINT uk_push_suscripciones_endpoint
+        UNIQUE (endpoint)
+);
+
+ALTER SEQUENCE push_suscripciones_id_seq
+    OWNED BY push_suscripciones.id_push_suscripcion;
+
+CREATE INDEX idx_push_suscripciones_usuario
+    ON push_suscripciones(id_usuario);
+
+CREATE INDEX idx_push_suscripciones_usuario_estado
+    ON push_suscripciones(id_usuario, estado_registro);
+
 COMMIT;

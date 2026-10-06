@@ -10,8 +10,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update   # Puedes usar 'validate' en producción
-    show-sql: true
+      ddl-auto: validate   # Puedes usar 'validate' en producción
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -37,3 +37,8 @@ jwt:
   secret-key: ${JWT_SECRET}
   expiration-ms: 86400000 # 86400000 = 24 horas
 
+webpush:
+  vapid:
+    public-key: ${VAPID_PUBLIC_KEY}
+    private-key: ${VAPID_PRIVATE_KEY}
+    subject: ${VAPID_SUBJECT}

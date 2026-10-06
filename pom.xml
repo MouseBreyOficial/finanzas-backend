@@ -72,6 +72,39 @@
 			<version>2.3.0</version>
 		</dependency>
 
+
+		<!-- ========================================================= -->
+		<!-- WEB PUSH                                                  -->
+		<!-- ========================================================= -->
+		<dependency>
+			<groupId>nl.martijndwars</groupId>
+			<artifactId>web-push</artifactId>
+			<version>5.1.2</version>
+		</dependency>
+		<!--
+            web-push 5.1.2 declara jose4j como runtime,
+            pero PushService expone JoseException en su API.
+            Por eso necesitamos jose4j también en compilación.
+        -->
+		<dependency>
+			<groupId>org.bitbucket.b_c</groupId>
+			<artifactId>jose4j</artifactId>
+			<version>0.9.6</version>
+		</dependency>
+		<!-- Apache HTTP requerido por PushService -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.14</version>
+		</dependency>
+		<!-- Criptografía necesaria para VAPID -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk18on</artifactId>
+			<version>1.82</version>
+		</dependency>
+
+
 	</dependencies>
 	<build>
 		<plugins>
