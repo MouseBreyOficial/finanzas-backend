@@ -5,8 +5,6 @@ import mousebrey.finanzas.backend.constante.Constant;
 import mousebrey.finanzas.backend.domain.Alerta;
 import mousebrey.finanzas.backend.domain.Cuenta;
 import mousebrey.finanzas.backend.domain.Gasto;
-import mousebrey.finanzas.backend.repository.GastoRepository;
-import mousebrey.finanzas.backend.repository.CuentaRepository;
 import mousebrey.finanzas.backend.domain.Usuario;
 import mousebrey.finanzas.backend.exception.ValidationException;
 import mousebrey.finanzas.backend.model.ResponseClient;
@@ -15,6 +13,8 @@ import mousebrey.finanzas.backend.model.request.AlertaRequest;
 import mousebrey.finanzas.backend.model.request.AlertaUpdateRequest;
 import mousebrey.finanzas.backend.model.response.AlertaResponse;
 import mousebrey.finanzas.backend.repository.AlertaRepository;
+import mousebrey.finanzas.backend.repository.CuentaRepository;
+import mousebrey.finanzas.backend.repository.GastoRepository;
 import mousebrey.finanzas.backend.repository.UsuarioRepository;
 import mousebrey.finanzas.backend.service.AlertaService;
 import org.springframework.stereotype.Service;
@@ -37,9 +37,7 @@ public class AlertaServiceImpl implements AlertaService {
     @Override
     public ResponseClient<AlertaResponse> registrar(AlertaRequest request) {
         try {
-            Usuario usuario = usuarioRepository.findById(request.getIdUsuario())
-                    .orElseThrow(() -> new ValidationException(Constant.CODIGO_EMPTY, "Usuario no encontrado"));
-
+            Usuario usuario = usuarioRepository.findById(request.getIdUsuario()).orElseThrow(() -> new ValidationException(Constant.CODIGO_EMPTY, "Usuario no encontrado"));
             Alerta alerta = new Alerta();
             alerta.setDescripcion(request.getDescripcion());
             alerta.setFechaAlerta(request.getFechaAlerta());
@@ -50,8 +48,16 @@ public class AlertaServiceImpl implements AlertaService {
             alerta.setEstado(request.getEstado() == null ? "PENDIENTE" : request.getEstado());
             alerta.setMonto(request.getMonto());
             alerta.setCategoria(request.getCategoria());
-            alerta.setCuenta(request.getIdCuenta() == null ? null : cuentaRepository.findById(request.getIdCuenta()).orElse(null));
+            alerta.setCuenta(request.getIdCuenta() == null ? null : cuentaRepository.findById(request.getIdCuenta()).orElse(null)
+            );
+
             alerta.setUsuario(usuario);
+            /*
+             * Una alerta nueva todavía no ha generado
+             * ninguna notificación Push.
+             */
+            alerta.setFechaUltimaNotificacion(null);
+            alerta.setTipoUltimaNotificacion(null);
             alerta.setUsuarioCreacion(request.getUsuarioCreacion());
             alerta.setFechaCreacion(LocalDateTime.now());
 
@@ -65,9 +71,17 @@ public class AlertaServiceImpl implements AlertaService {
 
     @Override
     public ResponseClient<AlertaResponse> actualizar(AlertaUpdateRequest request) {
+
         try {
             Alerta alerta = alertaRepository.findById(request.getId())
                     .orElseThrow(() -> new ValidationException(Constant.CODIGO_EMPTY, "Alerta no encontrada"));
+
+            /*
+             * Guardamos la fecha anterior porque si cambia
+             * el vencimiento debemos permitir nuevamente
+             * las notificaciones correspondientes.
+             */
+            LocalDate fechaAlertaAnterior = alerta.getFechaAlerta();
 
             alerta.setDescripcion(request.getDescripcion());
             alerta.setFechaAlerta(request.getFechaAlerta());
@@ -79,12 +93,21 @@ public class AlertaServiceImpl implements AlertaService {
             alerta.setMonto(request.getMonto());
             alerta.setCategoria(request.getCategoria());
             alerta.setCuenta(request.getIdCuenta() == null ? null : cuentaRepository.findById(request.getIdCuenta()).orElse(null));
+
+            /*
+             * Si el usuario modifica la fecha de vencimiento,
+             * comienza un nuevo ciclo de notificaciones.
+             */
+            if (fechaAlertaAnterior != null && !fechaAlertaAnterior.equals(request.getFechaAlerta())) {
+                alerta.setFechaUltimaNotificacion(null);
+                alerta.setTipoUltimaNotificacion(null);
+            }
             alerta.setUsuarioModificacion(request.getUsuarioModificacion());
             alerta.setFechaModificacion(LocalDateTime.now());
 
             alertaRepository.save(alerta);
-
             return ResponseClient.setOk(mapToResponse(alerta));
+
         } catch (Exception e) {
             throw new ValidationException(Constant.CODIGO_ERROR, Constant.MENSAJE_ERROR);
         }
@@ -92,23 +115,31 @@ public class AlertaServiceImpl implements AlertaService {
 
     @Override
     public ResponseClientList<AlertaResponse> listarPorUsuario(Long idUsuario) {
+
         List<AlertaResponse> lista = alertaRepository.findByUsuarioIdUsuario(idUsuario).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+                .map(this::mapToResponse).collect(Collectors.toList());
+
         return ResponseClientList.setOk(lista);
     }
 
     @Override
     public ResponseClient<AlertaResponse> obtenerPorId(Long id) {
+
         Alerta alerta = alertaRepository.findById(id)
                 .orElseThrow(() -> new ValidationException(Constant.CODIGO_EMPTY, "Alerta no encontrada"));
+
         return ResponseClient.setOk(mapToResponse(alerta));
     }
 
-
     @Override
     public ResponseClient<AlertaResponse> marcarPagada(Long id, String usuario) {
+
         Alerta alerta = alertaRepository.findById(id).orElseThrow(() -> new ValidationException(Constant.CODIGO_EMPTY, "Alerta no encontrada"));
+
+        /*
+         * Si la alerta tiene monto y cuenta asociada,
+         * registramos automáticamente el gasto.
+         */
         if (alerta.getMonto() != null && alerta.getCuenta() != null) {
             Cuenta cuenta = alerta.getCuenta();
             BigDecimal disponible = cuenta.getSaldoActual() == null ? BigDecimal.ZERO : cuenta.getSaldoActual();
@@ -116,20 +147,57 @@ public class AlertaServiceImpl implements AlertaService {
                 throw new ValidationException(Constant.CODIGO_ERROR, "Saldo insuficiente para pagar la alerta. Disponible: S/ " + disponible);
             }
             Gasto gasto = new Gasto();
-            gasto.setMonto(alerta.getMonto()); gasto.setFecha(LocalDate.now());
+            gasto.setMonto(alerta.getMonto());
+            gasto.setFecha(LocalDate.now());
             gasto.setCategoria(alerta.getCategoria() == null ? "PAGO_FIJO" : alerta.getCategoria());
-            gasto.setDescripcion(alerta.getDescripcion()); gasto.setCuenta(alerta.getCuenta());
-            gasto.setUsuarioCreacion(usuario); gasto.setFechaCreacion(LocalDateTime.now()); gastoRepository.save(gasto);
+            gasto.setDescripcion(alerta.getDescripcion());
+            gasto.setCuenta(alerta.getCuenta());
+            gasto.setUsuarioCreacion(usuario);
+            gasto.setFechaCreacion(LocalDateTime.now());
+            gastoRepository.save(gasto);
             cuenta.setSaldoActual(disponible.subtract(alerta.getMonto()));
             cuentaRepository.save(cuenta);
         }
+
+        /*
+         * ALERTA RECURRENTE
+         *
+         * diaMes conserva el día ORIGINAL configurado.
+         *
+         * Ejemplo:
+         *
+         * diaMes = 31
+         *
+         * Enero   -> 31
+         * Febrero -> 28
+         * Marzo   -> 31
+         * Abril   -> 30
+         * Mayo    -> 31
+         */
         if (Boolean.TRUE.equals(alerta.getEsRecurrente())) {
             LocalDate base = alerta.getFechaAlerta().isAfter(LocalDate.now()) ? alerta.getFechaAlerta() : LocalDate.now();
             LocalDate next = base.plusMonths(1);
             int dia = alerta.getDiaMes() == null ? alerta.getFechaAlerta().getDayOfMonth() : alerta.getDiaMes();
-            alerta.setFechaAlerta(next.withDayOfMonth(Math.min(dia, next.lengthOfMonth())));
+            int diaSiguienteMes = Math.min(dia, next.lengthOfMonth());
+            alerta.setFechaAlerta(next.withDayOfMonth(diaSiguienteMes));
             alerta.setEstado("PENDIENTE");
+
+            /*
+             * Nuevo ciclo de la alerta.
+             *
+             * Permitimos nuevamente:
+             *
+             * - aviso anticipado
+             * - aviso del día del vencimiento
+             */
+            alerta.setFechaUltimaNotificacion(null);
+            alerta.setTipoUltimaNotificacion(null);
         } else {
+
+            /*
+             * Las alertas no recurrentes quedan pagadas
+             * definitivamente.
+             */
             alerta.setEstado("PAGADO");
         }
         alerta.setUsuarioModificacion(usuario);
@@ -155,4 +223,3 @@ public class AlertaServiceImpl implements AlertaService {
         return response;
     }
 }
-

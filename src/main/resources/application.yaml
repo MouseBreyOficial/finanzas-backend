@@ -37,6 +37,11 @@ jwt:
   secret-key: ${JWT_SECRET}
   expiration-ms: 86400000 # 86400000 = 24 horas
 
+alertas:
+  notificaciones:
+    dias-anticipacion: ${ALERTAS_DIAS_ANTICIPACION}
+    cron: ${ALERTAS_NOTIFICACIONES_CRON}
+
 webpush:
   vapid:
     public-key: ${VAPID_PUBLIC_KEY}

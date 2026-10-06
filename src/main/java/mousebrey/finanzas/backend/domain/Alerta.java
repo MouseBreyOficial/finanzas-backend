@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "alertas")
@@ -49,4 +50,10 @@ public class Alerta extends BaseModel {
     @ManyToOne
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
+
+    @Column(name = "fecha_ultima_notificacion")
+    private LocalDateTime fechaUltimaNotificacion;
+
+    @Column(name = "tipo_ultima_notificacion", length = 30)
+    private String tipoUltimaNotificacion;
 }

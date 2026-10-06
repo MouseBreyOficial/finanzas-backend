@@ -181,6 +181,9 @@ CREATE TABLE alertas (
     categoria           VARCHAR(100),
     id_cuenta           BIGINT,
 
+    -- Control de notificaciones Push
+    fecha_ultima_notificacion TIMESTAMP,
+
     id_usuario          BIGINT       NOT NULL,
 
     -- Auditoria (BaseModel)

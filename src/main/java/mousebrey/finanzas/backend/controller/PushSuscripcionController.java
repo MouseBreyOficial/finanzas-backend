@@ -47,7 +47,5 @@ public class PushSuscripcionController {
     public ResponseEntity<ResponseClient<Void>> prueba(@PathVariable Long idUsuario) {
         return ResponseEntity.ok(webPushService.enviarPrueba(idUsuario));
     }
-
-
 }
 
