@@ -183,6 +183,7 @@ CREATE TABLE alertas (
 
     -- Control de notificaciones Push
     fecha_ultima_notificacion TIMESTAMP,
+    tipo_ultima_notificacion VARCHAR(30),
 
     id_usuario          BIGINT       NOT NULL,
 

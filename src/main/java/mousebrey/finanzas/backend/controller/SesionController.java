@@ -25,4 +25,9 @@ public class SesionController {
     public ResponseEntity<ResponseClient<AuthResponse>> registrar(@RequestBody RegistroDto dto) {
         return ResponseEntity.ok(sesionServiceImpl.registrar(dto));
     }
+
+    @GetMapping("/backend/up")
+    public ResponseEntity<String> wakeup() {
+        return ResponseEntity.ok("Backend activo");
+    }
 }
