@@ -11,7 +11,6 @@ import mousebrey.finanzas.backend.model.ResponseClient;
 import mousebrey.finanzas.backend.repository.UsuarioRepository;
 import mousebrey.finanzas.backend.security.JwtUtil;
 import mousebrey.finanzas.backend.service.SesionService;
-import mousebrey.finanzas.backend.service.UsuarioService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
