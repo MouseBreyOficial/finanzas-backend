@@ -1,6 +1,6 @@
 -- ============================================================================
 -- FINANZA PERSONAL - SCRIPT FINAL PARA BASE DE DATOS NUEVA (PostgreSQL)
--- Estado del modelo: Backend V8 / Frontend V7.4
+-- Estado del modelo: Backend V9 / Frontend V8 - Transferencias
 --
 -- USO:
 --   1. Crear una base de datos vacia (por ejemplo: finanza_personal_bd).
@@ -256,5 +256,52 @@ CREATE INDEX idx_push_suscripciones_usuario
 
 CREATE INDEX idx_push_suscripciones_usuario_estado
     ON push_suscripciones(id_usuario, estado_registro);
+
+
+-- ============================================================================
+-- 7. TRANSFERENCIAS ENTRE CUENTAS PROPIAS
+--    Registra movimientos de dinero entre cuentas del mismo usuario.
+--    No representa un ingreso ni un gasto.
+-- ============================================================================
+CREATE SEQUENCE transferencias_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+CREATE TABLE transferencias (
+    id_transferencia    BIGINT        NOT NULL DEFAULT nextval('transferencias_id_seq'),
+    id_usuario          BIGINT        NOT NULL,
+    id_cuenta_origen    BIGINT        NOT NULL,
+    id_cuenta_destino   BIGINT        NOT NULL,
+    monto               NUMERIC(12,2) NOT NULL,
+    fecha_transferencia DATE          NOT NULL,
+    descripcion         VARCHAR(255),
+
+    -- Auditoria (BaseModel)
+    usuario_creacion     VARCHAR(100),
+    fecha_creacion       TIMESTAMP,
+    usuario_modificacion VARCHAR(100),
+    fecha_modificacion   TIMESTAMP,
+
+    CONSTRAINT pk_transferencias PRIMARY KEY (id_transferencia),
+    CONSTRAINT fk_transferencias_usuario
+        FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
+    CONSTRAINT fk_transferencias_cuenta_origen
+        FOREIGN KEY (id_cuenta_origen) REFERENCES cuentas(id_cuenta),
+    CONSTRAINT fk_transferencias_cuenta_destino
+        FOREIGN KEY (id_cuenta_destino) REFERENCES cuentas(id_cuenta),
+    CONSTRAINT chk_transferencias_cuentas_distintas
+        CHECK (id_cuenta_origen <> id_cuenta_destino),
+    CONSTRAINT chk_transferencias_monto_positivo
+        CHECK (monto > 0)
+);
+
+ALTER SEQUENCE transferencias_id_seq OWNED BY transferencias.id_transferencia;
+CREATE INDEX idx_transferencias_usuario ON transferencias(id_usuario);
+CREATE INDEX idx_transferencias_origen ON transferencias(id_cuenta_origen);
+CREATE INDEX idx_transferencias_destino ON transferencias(id_cuenta_destino);
+CREATE INDEX idx_transferencias_fecha ON transferencias(fecha_transferencia);
 
 COMMIT;
