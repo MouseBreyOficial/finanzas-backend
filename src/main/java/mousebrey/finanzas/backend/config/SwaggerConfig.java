@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @OpenAPIDefinition(
         info = @Info(
                 title = "Mousebrey API Backend - Finanza personal",
-                version = "1.4",
+                version = "1.5",
                 description = "Documentación de endpoints para el backend con autenticación JWT"
         )
 )
