@@ -1,0 +1,48 @@
+name: Wake Render Backend
+
+on:
+  schedule:
+    - cron: '50 7 * * *'
+      timezone: 'America/Lima'
+    - cron: '00 23 * * *'
+      timezone: 'America/Lima'
+  workflow_dispatch:
+
+jobs:
+  wake-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Despertar backend de Render
+        shell: bash
+        run: |
+          URL="https://finanzas-backend-xap0.onrender.com/api/auth/backend/up"
+
+          echo "Wake up - Finanzas Backend"
+
+          for i in {1..10}; do
+            echo "Intento $i de 10..."
+
+            STATUS=$(curl               --silent               --show-error               --location               --output /tmp/backend-response.txt               --write-out "%{http_code}"               --connect-timeout 20               --max-time 60               "$URL" || true)
+
+            echo "HTTP Status: $STATUS"
+
+            if [ "$STATUS" = "200" ]; then
+              echo "Backend despierto correctamente."
+              echo "Respuesta:"
+              cat /tmp/backend-response.txt || true
+              echo
+              exit 0
+            fi
+
+            echo "Backend todavía no está disponible."
+
+            if [ "$i" -lt 10 ]; then
+              echo "Esperando 30 segundos..."
+              sleep 30
+            fi
+          done
+
+          echo "No se pudo despertar el backend después de 10 intentos."
+          exit 1
