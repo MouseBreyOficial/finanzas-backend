@@ -2,10 +2,7 @@ name: Wake Render Backend
 
 on:
   schedule:
-    - cron: '50 7 * * *'
-      timezone: 'America/Lima'
-    - cron: '50 23 * * *'
-      timezone: 'America/Lima'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
