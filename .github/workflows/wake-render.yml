@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: '50 7 * * *'
       timezone: 'America/Lima'
-    - cron: '00 23 * * *'
+    - cron: '50 23 * * *'
       timezone: 'America/Lima'
   workflow_dispatch:
 
